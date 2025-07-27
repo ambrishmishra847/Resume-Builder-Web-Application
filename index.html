@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- Global Styles & Theme --- */
+        :root {
+            --accent-color: #0d6efd;
+        }
+
+        /* --- Login Screen Styles --- */
+        #login-view {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            color: white;
+        }
+        .login-card .form-control-lg {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .login-card .form-control-lg::placeholder { color: rgba(255, 255, 255, 0.7); }
+        .login-card .form-control-lg:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        /* --- Main Views Styles --- */
+        #dashboard-view, #editor-view, #preview-view, #experience-view, #template-view, #cover-letter-view {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .preview-pane {
+             background-color: #e9ecef;
+        }
+        #resume-preview {
+            aspect-ratio: 8.5 / 11;
+            max-width: 816px;
+            margin: 2rem auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .section-header { cursor: grab; }
+        .section-controls { opacity: 0; transition: opacity 0.2s ease-in-out; }
+        .reorderable-section:hover .section-controls { opacity: 1; }
+        
+        .experience-card, .template-card {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .experience-card:hover, .template-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .template-card .card-body { background-color: #fff; }
+
+        /* --- Accent Color Picker --- */
+        .color-dot {
+            width: 24px; height: 24px; border-radius: 50%;
+            cursor: pointer; border: 2px solid #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .color-dot:hover { transform: scale(1.1); }
+        .color-dot.active { border-color: #000; }
+
+        /* --- Template Specific Styles --- */
+        .template-serif { font-family: 'Merriweather', serif; font-size: 11pt; color: #333; }
+        .template-serif h1, .template-serif h2, .template-serif h3 { font-family: 'Merriweather', serif; }
+        .template-serif h1 { font-size: 26pt; text-transform: uppercase; text-align: center; }
+        .template-serif .contact-info { text-align: center; margin-bottom: 20px; font-size: 10pt; }
+        .template-serif h2 { font-size: 12pt; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px; text-transform: uppercase; }
+        .template-serif h3 { font-size: 11pt; font-weight: bold; }
+
+        .template-modern-writer { font-family: 'Lato', sans-serif; font-size: 10.5pt; color: #555;}
+        .template-modern-writer h1 { font-size: 28pt; font-weight: bold; text-align: center; }
+        .template-modern-writer .contact-info { text-align: center; margin-bottom: 20px; font-size: 10pt; }
+        .template-modern-writer h2 { font-size: 11pt; font-weight: bold; color: var(--accent-color); border-bottom: 1px solid #ddd; text-transform: uppercase; }
+        
+        .template-coral, .template-swiss, .template-ms-polished { font-family: 'Lato', sans-serif; font-size: 10pt; color: #555; display: grid; grid-template-columns: 0.8fr 2fr; }
+        .template-coral .left-column { background-color: var(--accent-color, #FF7F50); color: white; padding: 2rem; }
+        .template-coral .right-column h2 { color: var(--accent-color, #FF7F50); border-bottom-color: var(--accent-color, #FF7F50); }
+        
+        .template-swiss .left-column { background-color: var(--accent-color, #4A4A4A); color: white; padding: 2rem; }
+        .template-swiss .right-column h2 { color: var(--accent-color, #4A4A4A); border-bottom-color: var(--accent-color, #4A4A4A); }
+        
+        .template-ms-polished .left-column { background-color: #f2f2f2; padding: 2rem; }
+        .template-ms-polished .right-column h1 { color: var(--accent-color, #2E75B5); }
+        .template-ms-polished .right-column h2 { color: var(--accent-color, #2E75B5); border-bottom-color: var(--accent-color, #2E75B5); }
+        
+        .template-bold-header { display: block; }
+        .template-bold-header .header-block { background-color: var(--accent-color, #333); color: white; text-align: center; padding: 2rem; }
+        .template-bold-header .header-block img { max-width: 150px; border: 4px solid white; }
+
+        .template-ms-modern-chrono h2 { font-size: 14pt; font-weight: 700; border-bottom: 1px solid #000; }
+        
+        .template-timeline .timeline-item { border-left-color: var(--accent-color, #0d6efd); }
+        .template-timeline .timeline-item::before { border-color: var(--accent-color, #0d6efd); }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen Container -->
+    <div id="login-view" class="d-none">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-5">
+                    <div class="card login-card shadow-lg">
+                        <div class="card-body p-5 text-center">
+                            <i class="bi bi-file-earmark-person-fill display-1 mb-3"></i>
+                            <h1 class="fw-bold mb-3">Welcome!</h1>
+                            <p class="mb-4">Let's get started by personalizing your experience.</p>
+                            <form id="login-form">
+                                <div class="form-floating mb-4">
+                                    <input type="text" class="form-control form-control-lg" id="username" placeholder=" " required>
+                                    <label for="username" style="color: rgba(255,255,255,0.7);">Your Name</label>
+                                </div>
+                                <button class="btn btn-light btn-lg w-100 fw-bold" type="submit">Get Started</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard-view" class="d-none">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="#">Resume Builder</a>
+                <div class="d-flex">
+                    <span class="navbar-text me-3" id="user-greeting"></span>
+                    <button class="btn btn-outline-light" id="logout-btn">Logout</button>
+                </div>
+            </div>
+        </nav>
+        <div class="container p-4">
+            <h2 class="display-6 fw-bold">Dashboard</h2>
+            <p class="text-muted">Welcome back! Create and manage your resumes and cover letters.</p>
+            <hr>
+            <div class="row mt-4" id="dashboard-content">
+                <!-- Resumes Section -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-file-earmark-text-fill me-2"></i>My Resumes</span>
+                             <button class="btn btn-primary btn-sm" id="dashboard-create-new-btn"><i class="bi bi-plus-circle me-2"></i>Create New</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="my-resumes-list" class="row g-3">
+                                <!-- Saved resumes will be listed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cover Letters Section -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                           <span><i class="bi bi-journal-text me-2"></i>My Cover Letters</span>
+                           <button class="btn btn-primary btn-sm" id="dashboard-create-cover-letter-btn"><i class="bi bi-plus-circle me-2"></i>Create New</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="my-cover-letters-list" class="row g-3">
+                                <!-- Saved cover letters will be listed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Experience Level Container -->
+    <div id="experience-view" class="d-none container py-5">
+         <header class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="display-6 fw-bold">Create New Resume</h2>
+                <p class="text-muted">First, let us know your experience level.</p>
+            </div>
+            <button class="btn btn-secondary" id="back-to-dashboard-from-exp-btn"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</button>
+        </header>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-5">
+                <div class="card experience-card text-center" data-experience="fresher">
+                    <div class="card-body p-5">
+                        <i class="bi bi-person-badge display-4 text-primary mb-3"></i>
+                        <h3 class="card-title fw-bold">I'm a Fresher</h3>
+                        <p class="text-muted">Best for students or recent graduates.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                 <div class="card experience-card text-center" data-experience="experienced">
+                    <div class="card-body p-5">
+                        <i class="bi bi-briefcase-fill display-4 text-primary mb-3"></i>
+                        <h3 class="card-title fw-bold">I'm Experienced</h3>
+                        <p class="text-muted">Best for professionals with work history.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor Container -->
+    <div id="editor-view" class="d-none container py-5">
+        <header class="d-flex justify-content-between align-items-center mb-5">
+            <h1 class="fs-3 fw-bold">Resume Editor</h1>
+            <button class="btn btn-secondary" id="back-to-experience-btn"><i class="bi bi-arrow-left me-2"></i>Back</button>
+        </header>
+        <form id="resume-form">
+            <input type="hidden" name="resumeId" id="resumeId">
+            <div class="d-grid gap-4" id="form-sections-container"></div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Save & Choose Template</button>
+        </form>
+    </div>
+    
+    <!-- Cover Letter Editor Container -->
+    <div id="cover-letter-view" class="d-none container py-5">
+        <header class="d-flex justify-content-between align-items-center mb-5">
+            <h1 class="fs-3 fw-bold">Cover Letter Editor</h1>
+            <button class="btn btn-secondary" id="back-to-dashboard-from-cl-btn"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</button>
+        </header>
+        <form id="cover-letter-form">
+            <input type="hidden" id="coverLetterId">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label for="cl-title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="cl-title" placeholder="e.g., Application for Software Engineer">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cl-body" class="form-label">Body</label>
+                        <textarea class="form-control" id="cl-body" rows="15" placeholder="Write your cover letter here..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Cover Letter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Template Selection Container -->
+    <div id="template-view" class="d-none container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="display-6 fw-bold">Choose a Template</h2>
+                <p class="text-muted" id="template-instructions">Select a style for your new resume.</p>
+            </div>
+            <button class="btn btn-secondary" id="back-to-editor-btn-from-template"><i class="bi bi-pencil-fill me-2"></i>Back to Editor</button>
+        </div>
+        <div class="row g-4" id="template-list"></div>
+    </div>
+
+    <!-- Preview Container -->
+    <div id="preview-view" class="d-none">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-8 vh-100 overflow-auto preview-pane">
+                    <div id="resume-preview" class="bg-white"></div>
+                </div>
+                <div class="col-lg-4 vh-100 p-4 bg-light overflow-auto">
+                    <h3 class="fw-bold">Finalize Your Resume</h3>
+                    <p class="text-muted">Your resume is ready. Make final adjustments below.</p>
+                    <hr>
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Accent Color</h5>
+                        <div class="d-flex gap-2" id="color-picker">
+                            <div class="color-dot" style="background-color: #0d6efd;" data-color="#0d6efd"></div>
+                            <div class="color-dot" style="background-color: #6f42c1;" data-color="#6f42c1"></div>
+                            <div class="color-dot" style="background-color: #d63384;" data-color="#d63384"></div>
+                            <div class="color-dot" style="background-color: #dc3545;" data-color="#dc3545"></div>
+                            <div class="color-dot" style="background-color: #fd7e14;" data-color="#fd7e14"></div>
+                            <div class="color-dot" style="background-color: #198754;" data-color="#198754"></div>
+                            <div class="color-dot" style="background-color: #212529;" data-color="#212529"></div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h5 class="fw-semibold">Change Template</h5>
+                        <div class="btn-group-vertical w-100" role="group" id="template-switcher"></div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="save-resume-btn"><i class="bi bi-save-fill me-2"></i>Save to My Resumes</button>
+                        <button class="btn btn-secondary" id="back-to-editor-btn-from-preview"><i class="bi bi-pencil-fill me-2"></i>Back to Editor</button>
+                        <button class="btn btn-success" id="download-pdf-btn"><i class="bi bi-download me-2"></i>Download PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Section Modal -->
+    <div class="modal fade" id="customSectionModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Custom Section</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <label for="customSectionTitle" class="form-label">Section Title</label>
+            <input type="text" class="form-control" id="customSectionTitle" placeholder="e.g., Languages">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="saveCustomSectionBtn">Save Section</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        // --- Global State ---
+        let currentResumeData = {};
+        
+        // --- Utility Functions ---
+        const escapeHTML = str => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+        // --- View Management ---
+        const views = {
+            login: document.getElementById('login-view'),
+            dashboard: document.getElementById('dashboard-view'),
+            experience: document.getElementById('experience-view'),
+            editor: document.getElementById('editor-view'),
+            template: document.getElementById('template-view'),
+            preview: document.getElementById('preview-view'),
+            coverLetter: document.getElementById('cover-letter-view'),
+        };
+
+        function showView(viewToShow) {
+            Object.values(views).forEach(view => view.classList.add('d-none'));
+            if (views[viewToShow]) {
+                views[viewToShow].classList.remove('d-none');
+            }
+        }
+
+        // --- Data Management (Resumes & Cover Letters) ---
+        function getSavedItems(key) {
+            return JSON.parse(localStorage.getItem(key)) || [];
+        }
+
+        function saveItems(key, items) {
+            localStorage.setItem(key, JSON.stringify(items));
+        }
+
+        function saveCurrentResume() {
+            const resumes = getSavedItems('myResumes');
+            const currentId = currentResumeData.id ? parseInt(currentResumeData.id, 10) : null;
+            const existingIndex = currentId !== null ? resumes.findIndex(r => r.id === currentId) : -1;
+        
+            currentResumeData.lastUpdated = new Date().toISOString();
+        
+            if (existingIndex > -1) {
+                resumes[existingIndex] = currentResumeData;
+            } else {
+                currentResumeData.id = Date.now();
+                resumes.push(currentResumeData);
+            }
+            saveItems('myResumes', resumes);
+            alert('Resume saved successfully!');
+            populateDashboard();
+            showView('dashboard');
+        }
+
+        function deleteItem(type, id) {
+            const key = type === 'resume' ? 'myResumes' : 'myCoverLetters';
+            const itemName = type === 'resume' ? 'resume' : 'cover letter';
+            if (confirm(`Are you sure you want to delete this ${itemName}?`)) {
+                let items = getSavedItems(key);
+                items = items.filter(item => item.id !== id);
+                saveItems(key, items);
+                populateDashboard();
+            }
+        }
+
+        function duplicateResume(resumeId) {
+            let resumes = getSavedItems('myResumes');
+            const resumeToDuplicate = resumes.find(r => r.id === resumeId);
+            if(resumeToDuplicate) {
+                const newResume = JSON.parse(JSON.stringify(resumeToDuplicate)); // Deep copy
+                newResume.id = Date.now();
+                newResume.name = `${newResume.name} (Copy)`;
+                newResume.lastUpdated = new Date().toISOString();
+                resumes.push(newResume);
+                saveItems('myResumes', resumes);
+                populateDashboard();
+            }
+        }
+        
+        function populateDashboard() {
+            // Populate Resumes
+            const resumes = getSavedItems('myResumes');
+            const resumeContainer = document.getElementById('my-resumes-list');
+            if (resumes.length === 0) {
+                resumeContainer.innerHTML = `<div class="col-12"><p class="text-muted text-center">No resumes saved yet.</p></div>`;
+            } else {
+                resumeContainer.innerHTML = resumes.map(resume => `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">${escapeHTML(resume.name) || 'Untitled Resume'}</h5>
+                                <p class="card-text small text-muted">Last updated: ${new Date(resume.lastUpdated).toLocaleDateString()}</p>
+                            </div>
+                            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="previewResume(${resume.id})" title="Preview"><i class="bi bi-eye-fill"></i></button>
+                                <button class="btn btn-sm btn-outline-success" onclick="duplicateResume(${resume.id})" title="Duplicate"><i class="bi bi-copy"></i></button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editResume(${resume.id})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('resume', ${resume.id})" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Populate Cover Letters
+            const coverLetters = getSavedItems('myCoverLetters');
+            const clContainer = document.getElementById('my-cover-letters-list');
+             if (coverLetters.length === 0) {
+                clContainer.innerHTML = `<div class="col-12"><p class="text-muted text-center">No cover letters saved yet.</p></div>`;
+            } else {
+                clContainer.innerHTML = coverLetters.map(cl => `
+                     <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">${escapeHTML(cl.title) || 'Untitled Letter'}</h5>
+                                <p class="card-text small text-muted">Last updated: ${new Date(cl.lastUpdated).toLocaleDateString()}</p>
+                            </div>
+                            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editCoverLetter(${cl.id})" title="Edit"><i class="bi bi-pencil-fill"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('coverLetter', ${cl.id})" title="Delete"><i class="bi bi-trash-fill"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // --- Gemini AI Integration ---
+        async function callGeminiAPI(prompt, button) {
+            button.disabled = true;
+            const originalIcon = button.innerHTML;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { contents: chatHistory };
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.candidates && result.candidates[0] && result.candidates[0].content.parts[0]) {
+                    return result.candidates[0].content.parts[0].text;
+                }
+                throw new Error("Invalid response structure from API");
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                alert("Sorry, there was an error with the AI feature. Please try again.");
+                return null;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalIcon;
+            }
+        }
+
+        async function generateSummary(button) {
+            const jobTitle = document.querySelector('[name="title"]')?.value || '';
+            const techSkills = document.querySelector('[name="technical-skills"]')?.value || '';
+            const interpersonalSkills = document.querySelector('[name="interpersonal-skills"]')?.value || '';
+            
+            if (!jobTitle && !techSkills) {
+                alert("Please enter a Job Title and some skills to generate a summary.");
+                return;
+            }
+
+            const prompt = `Write a professional resume summary for a person applying for a '${jobTitle}' role. Their technical skills include: ${techSkills}. Their interpersonal skills include: ${interpersonalSkills}. The summary should be 2-3 sentences long and highly professional.`;
+            
+            const summaryText = await callGeminiAPI(prompt, button);
+            if (summaryText) {
+                document.querySelector('[name="summary"]').value = summaryText;
+            }
+        }
+
+        async function enhanceDescription(button) {
+            const textarea = button.closest('.dynamic-item').querySelector('textarea');
+            const originalText = textarea.value;
+
+            if (!originalText) {
+                alert("Please write a short description to enhance.");
+                return;
+            }
+
+            const prompt = `Rewrite the following resume bullet point or job description to be more professional and impactful. Use strong action verbs and quantify achievements where possible. Original text: "${originalText}"`;
+            
+            const enhancedText = await callGeminiAPI(prompt, button);
+            if (enhancedText) {
+                textarea.value = enhancedText;
+            }
+        }
+
+
+        // --- Editor Building & Data Handling ---
+        function buildEditor(experienceLevel, dataToLoad = {}) {
+            currentResumeData.experienceLevel = experienceLevel;
+            const container = document.getElementById('form-sections-container');
+            const sectionOrder = ['education', 'projects', 'technical-skills', 'interpersonal-skills', 'achievements', 'references'];
+            if (experienceLevel === 'experienced') { sectionOrder.unshift('work-experience'); }
+
+            let reorderableFormHTML = (dataToLoad.sections && dataToLoad.sections.length > 0 ? dataToLoad.sections : sectionOrder.map(id => ({id}))).map(s => buildFormSection(s.id, s.title)).join('');
+            
+            container.innerHTML = `
+                ${buildPersonalDetailsSection(experienceLevel, dataToLoad)}
+                <div id="reorderable-sections" class="d-grid gap-4">
+                    ${reorderableFormHTML}
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="add-custom-section-btn"><i class="bi bi-plus-circle-dotted me-2"></i>Add Custom Section</button>
+            `;
+            document.getElementById('add-custom-section-btn').addEventListener('click', addCustomSection);
+
+            document.getElementById('ai-summary-btn').addEventListener('click', function() { generateSummary(this) });
+
+            // Populate loaded data
+            document.getElementById('resumeId').value = dataToLoad.id || '';
+            const sectionsToPopulate = dataToLoad.sections && dataToLoad.sections.length > 0 ? dataToLoad.sections : sectionOrder.map(id => ({id, items:[]}));
+            sectionsToPopulate.forEach(section => {
+                if(section.content) {
+                    const textarea = document.querySelector(`#${section.id}-form-section textarea`);
+                    if(textarea) textarea.value = section.content;
+                } else if (section.items) {
+                    section.items.forEach(() => addDynamicItem(section.id));
+                }
+            });
+
+            // Photo preview logic
+            const photoInput = document.getElementById('photo-input');
+            const photoPreview = document.getElementById('photo-preview');
+            const removePhotoBtn = document.getElementById('remove-photo-btn');
+            
+            photoInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoPreview.src = e.target.result;
+                        removePhotoBtn.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            removePhotoBtn.addEventListener('click', function() {
+                photoInput.value = '';
+                photoPreview.src = 'https://placehold.co/150x150/e9ecef/6c757d?text=Photo';
+                removePhotoBtn.classList.add('d-none');
+            });
+        }
+        
+        function fillEditor(data) {
+            buildEditor(data.experienceLevel, data);
+            
+            document.querySelector('[name="name"]').value = data.name || '';
+            const titleInput = document.querySelector('[name="title"]');
+            if(titleInput) titleInput.value = data.title || '';
+            document.querySelector('[name="email"]').value = data.email || '';
+            document.querySelector('[name="phone"]').value = data.phone || '';
+            document.querySelector('[name="location"]').value = data.location || '';
+            document.querySelector('[name="summary"]').value = data.summary || '';
+            if(data.photo) {
+                document.getElementById('photo-preview').src = data.photo;
+                document.getElementById('remove-photo-btn').classList.remove('d-none');
+            }
+
+             data.sections.forEach(section => {
+                const sectionEl = document.getElementById(`${section.id}-form-section`);
+                if (!sectionEl) return;
+                
+                if(section.content) {
+                    const textarea = sectionEl.querySelector('textarea');
+                    if (textarea) textarea.value = section.content;
+                } else if(section.items) {
+                     const itemElements = sectionEl.querySelectorAll('.dynamic-item');
+                     section.items.forEach((itemData, index) => {
+                         if(itemElements[index]) {
+                             Object.keys(itemData).forEach(key => {
+                                 const input = itemElements[index].querySelector(`[name="${key}"]`);
+                                 if (input) input.value = itemData[key];
+                             });
+                         }
+                     });
+                }
+            });
+            showView('editor');
+        }
+
+        function buildPersonalDetailsSection(level, data = {}) {
+            const jobTitleField = level === 'experienced' 
+                ? `<div class="col-12"><input type="text" placeholder="Job Title" name="title" class="form-control" value="${data.title || ''}"></div>` 
+                : '';
+            return `<div class="p-4 rounded border bg-white">
+                        <h2 class="fs-5 fw-semibold mb-4">Personal Details</h2>
+                        <div class="row g-3">
+                            <div class="col-md-4 text-center">
+                                <img id="photo-preview" src="${data.photo || 'https://placehold.co/150x150/e9ecef/6c757d?text=Photo'}" class="rounded-circle mb-2" style="width: 150px; height: 150px; object-fit: cover;">
+                                <label for="photo-input" class="btn btn-sm btn-outline-primary">Upload Photo</label>
+                                <input type="file" name="photo" id="photo-input" class="d-none" accept="image/*">
+                                <button type="button" id="remove-photo-btn" class="btn btn-sm btn-outline-danger ${data.photo ? '' : 'd-none'}"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row g-3">
+                                    <div class="col-12"><input type="text" placeholder="Full Name" name="name" class="form-control" value="${data.name || ''}"></div>
+                                    ${jobTitleField}
+                                    <div class="col-12"><input type="email" placeholder="Email Address" name="email" class="form-control" value="${data.email || ''}"></div>
+                                    <div class="col-12"><input type="tel" placeholder="Phone Number" name="phone" class="form-control" value="${data.phone || ''}"></div>
+                                    <div class="col-12"><input type="text" placeholder="Location" name="location" class="form-control" value="${data.location || ''}"></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label mt-3">Professional Summary</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="ai-summary-btn"><i class="bi bi-stars me-1"></i>Auto-Generate</button>
+                                </div>
+                                <textarea placeholder="Write a brief summary about yourself..." name="summary" class="form-control" style="height: 100px">${data.summary || ''}</textarea>
+                            </div>
+                        </div>
+                    </div>`;
+        }
+
+        function buildFormSection(id, customTitle = '') {
+            let title, content, addButton;
+            switch(id) {
+                case 'work-experience': title = 'Work Experience'; content = `<div class="d-grid gap-3"></div>`; addButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addDynamicItem('${id}')">Add Experience</button>`; break;
+                case 'education': title = 'Education'; content = `<div class="d-grid gap-3"></div>`; addButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addDynamicItem('education')">Add Education</button>`; break;
+                case 'projects': title = 'Projects'; content = `<div class="d-grid gap-3"></div>`; addButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addDynamicItem('projects')">Add Project</button>`; break;
+                case 'technical-skills': title = 'Technical Skills'; content = `<textarea name="technical-skills" placeholder="e.g., JavaScript, Python, SQL" class="form-control" style="height: 100px"></textarea>`; addButton = ''; break;
+                case 'interpersonal-skills': title = 'Interpersonal Skills'; content = `<textarea name="interpersonal-skills" placeholder="e.g., Teamwork, Communication" class="form-control" style="height: 100px"></textarea>`; addButton = ''; break;
+                case 'achievements': title = 'Achievements & Certifications'; content = `<div class="d-grid gap-3"></div>`; addButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addDynamicItem('achievements')">Add Item</button>`; break;
+                case 'references': title = 'References'; content = `<div class="d-grid gap-3"></div>`; addButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addDynamicItem('references')">Add Reference</button>`; break;
+                default: title = customTitle; content = `<div class="d-grid gap-3"></div>`; addButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addDynamicItem('${id}', true)">Add Item</button>`; break;
+            }
+            let headerContent = (id.startsWith('custom-')) ? `<input type="text" class="form-control fs-5 fw-semibold" name="${id}-title" value="${title}">` : `<h2 class="fs-5 fw-semibold m-0">${title}</h2>`;
+            return `<div class="p-4 rounded border bg-white reorderable-section" id="${id}-form-section"><div class="d-flex justify-content-between align-items-center mb-4 section-header">${headerContent}<div class="section-controls"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="moveSectionUp(this)"><i class="bi bi-arrow-up"></i></button><button type="button" class="btn btn-sm btn-outline-secondary" onclick="moveSectionDown(this)"><i class="bi bi-arrow-down"></i></button><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSection(this)"><i class="bi bi-trash"></i></button></div></div>${content}${addButton}</div>`;
+        }
+
+        function addDynamicItem(type, isCustom = false) {
+            const list = document.querySelector(`#${type}-form-section > div:not(.section-header)`);
+            const newItem = document.createElement('div');
+            newItem.className = 'p-3 border rounded bg-light position-relative dynamic-item';
+            let itemHTML = `<button type="button" onclick="this.parentElement.remove()" class="btn-close position-absolute top-0 end-0 m-2"></button>`;
+            let aiButton = `<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="enhanceDescription(this)"><i class="bi bi-stars me-1"></i>Enhance with AI</button>`;
+            switch(type) {
+                case 'work-experience': itemHTML += `<div class="mb-2"><input type="text" placeholder="Job Title" name="work-title" class="form-control"></div><div class="mb-2"><input type="text" placeholder="Company Name" name="work-company" class="form-control"></div><div class="row g-2 mb-2"><div class="col"><input type="text" placeholder="Start Date" name="work-start" class="form-control"></div><div class="col"><input type="text" placeholder="End Date" name="work-end" class="form-control"></div></div><textarea placeholder="Job Description" name="work-desc" class="form-control" style="height: 100px"></textarea>${aiButton}`; break;
+                case 'education': itemHTML += `<div class="mb-2"><input type="text" placeholder="Degree or Certificate" name="edu-degree" class="form-control"></div><div class="mb-2"><input type="text" placeholder="Institution Name" name="edu-inst" class="form-control"></div><input type="text" placeholder="Graduation Date" name="edu-date" class="form-control">`; break;
+                case 'projects': itemHTML += `<div class="mb-2"><input type="text" placeholder="Project Title" name="proj-title" class="form-control"></div><textarea placeholder="Project Description" name="proj-desc" class="form-control" style="height: 80px"></textarea>${aiButton}`; break;
+                case 'achievements': itemHTML += `<input type="text" placeholder="Achievement or Certification" name="achieve-item" class="form-control">`; break;
+                case 'references': itemHTML += `<div class="mb-2"><input type="text" placeholder="Reference Name" name="ref-name" class="form-control"></div><div class="mb-2"><input type="text" placeholder="Title & Company" name="ref-title" class="form-control"></div><input type="text" placeholder="Contact (Email or Phone)" name="ref-contact" class="form-control">`; break;
+                default: itemHTML += `<input type="text" placeholder="Item" name="${type}-item" class="form-control">`; break;
+            }
+            newItem.innerHTML = itemHTML;
+            list.appendChild(newItem);
+        }
+        
+        function moveSectionUp(btn) {
+            const section = btn.closest('.reorderable-section');
+            if (section && section.previousElementSibling) {
+                section.parentElement.insertBefore(section, section.previousElementSibling);
+            }
+        }
+
+        function moveSectionDown(btn) {
+            const section = btn.closest('.reorderable-section');
+            if (section && section.nextElementSibling) {
+                section.parentElement.insertBefore(section.nextElementSibling, section);
+            }
+        }
+        
+        function removeSection(btn) {
+            btn.closest('.reorderable-section').remove();
+        }
+
+        function addCustomSection() {
+            const modal = bootstrap.Modal.getOrCreateInstance('#customSectionModal');
+            document.getElementById('customSectionTitle').value = '';
+            modal.show();
+        }
+
+        function getFormData(form) {
+            const data = { sections: [] };
+            data.id = document.getElementById('resumeId').value || null;
+            
+            const photoInput = document.getElementById('photo-input');
+            const photoPreview = document.getElementById('photo-preview');
+
+            if (photoInput.files && photoInput.files[0]) {
+                const reader = new FileReader();
+                reader.readAsDataURL(photoInput.files[0]);
+                reader.onload = () => { data.photo = reader.result; }; // Save as base64 string
+            } else if (photoPreview.src && !photoPreview.src.includes('placehold.co')) {
+                data.photo = photoPreview.src;
+            } else {
+                data.photo = null;
+            }
+
+            const personalDetailsForm = document.querySelector('.p-4.rounded.border.bg-white');
+            ['name', 'title', 'email', 'phone', 'location', 'summary'].forEach(key => {
+                const input = personalDetailsForm.querySelector(`[name="${key}"]`);
+                if (input) data[key] = input.value;
+            });
+            
+            document.querySelectorAll('#reorderable-sections .reorderable-section').forEach(sectionEl => {
+                const id = sectionEl.id.replace('-form-section', '');
+                const sectionData = { id: id, items: [] };
+                if (id.startsWith('custom-')) {
+                    sectionData.title = sectionEl.querySelector(`[name="${id}-title"]`).value;
+                }
+                if (id.includes('skills')) {
+                    sectionData.content = sectionEl.querySelector('textarea').value;
+                } else {
+                     sectionEl.querySelectorAll('.dynamic-item').forEach(itemEl => {
+                        const itemData = {};
+                        itemEl.querySelectorAll('input, textarea').forEach(input => {
+                            const name = input.name;
+                            itemData[name] = input.value;
+                        });
+                        sectionData.items.push(itemData);
+                    });
+                }
+                data.sections.push(sectionData);
+            });
+            return data;
+        }
+
+        const allTemplates = [
+             // Photo Templates
+            { id: 'swiss', name: 'Swiss (Google)', category: 'photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-5-en-us.png' },
+            { id: 'coral', name: 'Coral (Google)', category: 'photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-1-en-us.png' },
+            { id: 'ms-polished', name: 'Polished (Word)', category: 'photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-11-en-us.png' },
+            { id: 'ms-geometric', name: 'Geometric (Word)', category: 'photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-13-en-us.png' },
+            { id: 'executive-dark', name: 'Executive Dark', category: 'photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-15-en-us.png' },
+            { id: 'bold-header', name: 'Bold Header', category: 'photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-3-en-us.png' },
+            
+            // No-Photo Templates
+            { id: 'serif', name: 'Serif (Google)', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-10-en-us.png' },
+            { id: 'modern-writer', name: 'Modern Writer (Google)', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-2-en-us.png' },
+            { id: 'ms-modern-chrono', name: 'Modern Chrono (Word)', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-6-en-us.png' },
+            { id: 'ms-blue-spheres', name: 'Blue Spheres (Word)', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-12-en-us.png' },
+            { id: 'classic-condensed', name: 'Classic Condensed', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-4-en-us.png' },
+            { id: 'timeline', name: 'Timeline', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-14-en-us.png' },
+            { id: 'minimalist-text', name: 'Minimalist Text', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-7-en-us.png' },
+            { id: 'corporate-blue', name: 'Corporate Blue', category: 'no-photo', img: 'https://cdn-images.zety.com/images/zety/landings/examples/resume-example-9-en-us.png' },
+        ];
+
+        function buildTemplateSelection(hasPhoto) {
+            const container = document.getElementById('template-list');
+            const instructions = document.getElementById('template-instructions');
+            const categoryToShow = hasPhoto ? 'photo' : 'no-photo';
+            const templates = allTemplates.filter(t => t.category === categoryToShow);
+            instructions.textContent = hasPhoto 
+                ? "We recommend these templates for resumes with photos."
+                : "These templates are optimized for resumes without a photo.";
+            container.innerHTML = templates.map(t => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card template-card" data-template="${t.id}">
+                        <img src="${t.img}" class="card-img-top template-preview-img" alt="${t.name} template preview" onerror="this.src='https://placehold.co/600x400/cccccc/ffffff?text=Preview+Not+Available'">
+                        <div class="card-body text-center py-2">
+                            <h6 class="card-title fw-bold mb-0">${t.name}</h6>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    buildPreview(this.dataset.template);
+                    showView('preview');
+                });
+            });
+        }
+        
+        function buildPreview(templateId) {
+            const preview = document.getElementById('resume-preview');
+            const switcher = document.getElementById('template-switcher');
+            preview.className = `bg-white template-${templateId}`;
+            currentResumeData.templateId = templateId;
+            
+            const nl2br = str => escapeHTML(str).replace(/\n/g, '<br>');
+
+            let sectionsHTML = '';
+            currentResumeData.sections.forEach(section => {
+                let sectionContent = '';
+                const title = escapeHTML(section.title || section.id.replace(/-/g, ' '));
+                if (section.content) {
+                    const skills = section.content.split(',').map(s => s.trim()).filter(s => s);
+                    if (skills.length > 0) { sectionContent = `<div>${skills.map(skill => `<span class="badge bg-secondary me-1 mb-1">${escapeHTML(skill)}</span>`).join('')}</div>`; }
+                } else {
+                    section.items.forEach(item => {
+                        switch(section.id) {
+                            case 'work-experience': sectionContent += `<div class="mb-3"><div class="d-flex justify-content-between"><h3 class="h6 fw-bold mb-0">${escapeHTML(item['work-title'])}</h3><p class="small text-muted mb-0">${escapeHTML(item['work-start'])} - ${escapeHTML(item['work-end'])}</p></div><p class="text-muted fst-italic mb-1">${escapeHTML(item['work-company'])}</p><p class="small mb-0">${nl2br(item['work-desc'])}</p></div>`; break;
+                            case 'education': sectionContent += `<div class="mb-3"><div class="d-flex justify-content-between"><h3 class="h6 fw-bold mb-0">${escapeHTML(item['edu-degree'])}</h3><p class="small text-muted mb-0">${escapeHTML(item['edu-date'])}</p></div><p class="text-muted fst-italic mb-1">${escapeHTML(item['edu-inst'])}</p></div>`; break;
+                            case 'projects': sectionContent += `<div class="mb-3"><h3 class="h6 fw-bold mb-1">${escapeHTML(item['proj-title'])}</h3><p class="small mb-0">${nl2br(item['proj-desc'])}</p></div>`; break;
+                            case 'achievements': sectionContent += `<li class="mb-1">${escapeHTML(item['achieve-item'])}</li>`; break;
+                            case 'references': sectionContent += `<div class="mb-2"><p class="fw-bold mb-0">${escapeHTML(item['ref-name'])}</p><p class="small text-muted mb-0">${escapeHTML(item['ref-title'])} | ${escapeHTML(item['ref-contact'])}</p></div>`; break;
+                            default: if (item[`${section.id}-item`]) { sectionContent += `<li class="mb-1">${escapeHTML(item[`${section.id}-item`])}</li>`;} break;
+                        }
+                    });
+                    if (section.id === 'achievements' || section.id.startsWith('custom-')) { sectionContent = `<ul class="list-unstyled">${sectionContent}</ul>`; }
+                }
+                if (sectionContent.trim() !== '' && sectionContent.trim() !== '<ul class="list-unstyled"></ul>') { sectionsHTML += `<div class="mb-4 timeline-item"><h2 class="h5 fw-bold text-uppercase">${title}</h2>${sectionContent}</div>`; }
+            });
+            
+            if (['swiss', 'coral', 'ms-polished'].includes(templateId)) {
+                let leftColHTML = `<div class="left-column">`;
+                 if(currentResumeData.photo) { leftColHTML += `<img src="${currentResumeData.photo}" class="img-fluid rounded-circle mb-4">`; }
+                leftColHTML += `<section class="mb-4"><h2>Contact</h2><p class="small mb-1">${escapeHTML(currentResumeData.email)}</p><p class="small mb-1">${escapeHTML(currentResumeData.phone)}</p><p class="small mb-1">${escapeHTML(currentResumeData.location)}</p></section>`;
+                 const skillsSections = currentResumeData.sections.filter(s => s.id.includes('skills'));
+                 skillsSections.forEach(section => {
+                     const title = escapeHTML(section.id.replace(/-/g, ' '));
+                     const skills = section.content.split(',').map(s => s.trim()).filter(s => s);
+                     if (skills.length > 0) { leftColHTML += `<section class="mb-4"><h2>${title}</h2>${skills.map(skill => `<p class="small mb-1">${escapeHTML(skill)}</p>`).join('')}</section>`;}
+                 });
+                leftColHTML += `</div>`;
+                
+                let rightColHTML = `<div class="right-column"><h1>${escapeHTML(currentResumeData.name)}</h1><p class="job-title">${escapeHTML(currentResumeData.title)}</p><section class="mb-4"><h2>Summary</h2><p>${nl2br(currentResumeData.summary)}</p></section>`;
+                const otherSections = currentResumeData.sections.filter(s => !s.id.includes('skills'));
+                 otherSections.forEach(section => {
+                    let sectionContent = '';
+                    const title = escapeHTML(section.title || section.id.replace(/-/g, ' '));
+                     section.items.forEach(item => {
+                         switch(section.id) {
+                            case 'work-experience': sectionContent += `<div class="mb-3"><div class="d-flex justify-content-between"><h3 class="h6 fw-bold mb-0">${escapeHTML(item['work-title'])}</h3><p class="small text-muted mb-0">${escapeHTML(item['work-start'])} - ${escapeHTML(item['work-end'])}</p></div><p class="text-muted fst-italic mb-1">${escapeHTML(item['work-company'])}</p><p class="small mb-0">${nl2br(item['work-desc'])}</p></div>`; break;
+                            case 'education': sectionContent += `<div class="mb-3"><div class="d-flex justify-content-between"><h3 class="h6 fw-bold mb-0">${escapeHTML(item['edu-degree'])}</h3><p class="small text-muted mb-0">${escapeHTML(item['edu-date'])}</p></div><p class="text-muted fst-italic mb-1">${escapeHTML(item['edu-inst'])}</p></div>`; break;
+                            case 'projects': sectionContent += `<div class="mb-3"><h3 class="h6 fw-bold mb-1">${escapeHTML(item['proj-title'])}</h3><p class="small mb-0">${nl2br(item['proj-desc'])}</p></div>`; break;
+                            case 'achievements': sectionContent += `<li class="mb-1">${escapeHTML(item['achieve-item'])}</li>`; break;
+                            case 'references': sectionContent += `<div class="mb-2"><p class="fw-bold mb-0">${escapeHTML(item['ref-name'])}</p><p class="small text-muted mb-0">${escapeHTML(item['ref-title'])} | ${escapeHTML(item['ref-contact'])}</p></div>`; break;
+                            default: if (item[`${section.id}-item`]) { sectionContent += `<li class="mb-1">${escapeHTML(item[`${section.id}-item`])}</li>`;} break;
+                        }
+                     });
+                     if (section.id === 'achievements' || section.id.startsWith('custom-')) { sectionContent = `<ul class="list-unstyled">${sectionContent}</ul>`; }
+                     if (sectionContent.trim() !== '' && sectionContent.trim() !== '<ul class="list-unstyled"></ul>') { rightColHTML += `<section class="mb-4"><h2>${title}</h2>${sectionContent}</section>`; }
+                 });
+                rightColHTML += `</div>`;
+                preview.innerHTML = leftColHTML + rightColHTML;
+            } else if (templateId === 'bold-header' || templateId === 'ms-geometric') {
+                let headerContent = `<div class="header-block">`;
+                if (currentResumeData.photo) headerContent += `<img src="${currentResumeData.photo}" class="rounded-circle">`;
+                headerContent += `<h1>${escapeHTML(currentResumeData.name)}</h1><p class="job-title fs-5">${escapeHTML(currentResumeData.title || '')}</p></div>`;
+                preview.innerHTML = headerContent + `<div class="content-block">${sectionsHTML.replaceAll('timeline-item', '')}</div>`;
+            } else {
+                 let headerHTML = `<header class="text-center mb-4"><h1>${escapeHTML(currentResumeData.name)}</h1><p class="job-title fs-5">${escapeHTML(currentResumeData.title || '')}</p><div class="contact-info d-flex justify-content-center flex-wrap gap-3 small mt-2 text-muted"><span>${escapeHTML(currentResumeData.email)}</span> | <span>${escapeHTML(currentResumeData.phone)}</span> | <span>${escapeHTML(currentResumeData.location)}</span></div></header>`;
+                 if (templateId === 'ms-blue-spheres') {
+                     headerHTML = `<div class="header-block"><h1>${escapeHTML(currentResumeData.name)}</h1></div><div class="p-4">${sectionsHTML.replaceAll('timeline-item', '')}</div>`;
+                 } else {
+                     headerHTML = `<div class="p-4">${headerHTML}<section class="mb-4"><h2 class="h5 fw-bold text-uppercase">Summary</h2><p>${nl2br(currentResumeData.summary)}</p></section>${sectionsHTML}</div>`
+                 }
+                 preview.innerHTML = headerHTML;
+            }
+            
+            const templates = currentResumeData.photo ? allTemplates.filter(t=>t.category==='photo') : allTemplates.filter(t=>t.category==='no-photo');
+            switcher.innerHTML = templates.map(t => `<button class="btn ${t.id === templateId ? 'btn-primary' : 'btn-outline-primary'} mb-2" onclick="buildPreview('${t.id}')">${t.name}</button>`).join('');
+        }
+        
+        function editResume(resumeId) {
+            const resumes = getSavedItems('myResumes');
+            const resumeToEdit = resumes.find(r => r.id === resumeId);
+            if(resumeToEdit) {
+                fillEditor(resumeToEdit);
+            }
+        }
+
+        function previewResume(resumeId) {
+            const resumes = getSavedItems('myResumes');
+            currentResumeData = resumes.find(r => r.id === resumeId);
+            if(currentResumeData) {
+                buildPreview(currentResumeData.templateId || (currentResumeData.photo ? 'swiss' : 'serif'));
+                showView('preview');
+            }
+        }
+
+        function editCoverLetter(id) {
+            const letters = getSavedItems('myCoverLetters');
+            const letter = letters.find(l => l.id === id);
+            if(letter) {
+                document.getElementById('coverLetterId').value = letter.id;
+                document.getElementById('cl-title').value = letter.title;
+                document.getElementById('cl-body').value = letter.body;
+                showView('coverLetter');
+            }
+        }
+
+        // --- Main App Initialization & Navigation ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const logoutBtn = document.getElementById('logout-btn');
+            const backToDashboardFromExpBtn = document.getElementById('back-to-dashboard-from-exp-btn');
+            const backToExperienceBtn = document.getElementById('back-to-experience-btn');
+            const backToEditorFromTemplateBtn = document.getElementById('back-to-editor-btn-from-template');
+            const backToEditorFromPreviewBtn = document.getElementById('back-to-editor-btn-from-preview');
+            const experienceCards = document.querySelectorAll('.experience-card');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+            const saveResumeBtn = document.getElementById('save-resume-btn');
+            const coverLetterForm = document.getElementById('cover-letter-form');
+
+            function checkUser() {
+                const userProfile = JSON.parse(localStorage.getItem('resumeBuilderUser'));
+                if (userProfile && userProfile.name) {
+                    document.getElementById('user-greeting').textContent = `Hello, ${userProfile.name}!`;
+                    populateDashboard();
+                    showView('dashboard');
+                } else {
+                    showView('login');
+                }
+            }
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                if (username) {
+                    localStorage.setItem('resumeBuilderUser', JSON.stringify({ name: username }));
+                    checkUser();
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('resumeBuilderUser');
+                checkUser();
+            });
+            
+            document.getElementById('dashboard-view').addEventListener('click', function(e) {
+                if(e.target.matches('#dashboard-create-new-btn')) {
+                    currentResumeData = {};
+                    showView('experience');
+                }
+                if(e.target.matches('#dashboard-create-cover-letter-btn')) {
+                    document.getElementById('cover-letter-form').reset();
+                    document.getElementById('coverLetterId').value = '';
+                    showView('coverLetter');
+                }
+            });
+
+            document.getElementById('back-to-dashboard-from-cl-btn').addEventListener('click', () => showView('dashboard'));
+            backToDashboardFromExpBtn.addEventListener('click', () => showView('dashboard'));
+            backToExperienceBtn.addEventListener('click', () => showView('experience'));
+
+            experienceCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    buildEditor(this.dataset.experience, currentResumeData);
+                    showView('editor');
+                });
+            });
+
+            backToEditorFromTemplateBtn.addEventListener('click', () => showView('editor'));
+            backToEditorFromPreviewBtn.addEventListener('click', () => showView('editor'));
+            
+            document.getElementById('saveCustomSectionBtn').addEventListener('click', function() {
+                const title = document.getElementById('customSectionTitle').value.trim();
+                if (!title) return;
+                const sectionId = 'custom-' + Date.now();
+                const newSectionHTML = buildFormSection(sectionId, title);
+                document.getElementById('reorderable-sections').insertAdjacentHTML('beforeend', newSectionHTML);
+                bootstrap.Modal.getInstance('#customSectionModal').hide();
+            });
+            
+            document.getElementById('resume-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                currentResumeData = getFormData(this);
+                buildTemplateSelection(!!currentResumeData.photo);
+                showView('template');
+            });
+
+            coverLetterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const id = document.getElementById('coverLetterId').value;
+                const title = document.getElementById('cl-title').value;
+                const body = document.getElementById('cl-body').value;
+                
+                const letters = getSavedItems('myCoverLetters');
+                const existingIndex = id ? letters.findIndex(l => l.id == id) : -1;
+
+                const letterData = { title, body, lastUpdated: new Date().toISOString() };
+
+                if(existingIndex > -1) {
+                    letters[existingIndex] = { ...letters[existingIndex], ...letterData };
+                } else {
+                    letterData.id = Date.now();
+                    letters.push(letterData);
+                }
+                saveItems('myCoverLetters', letters);
+                alert('Cover letter saved!');
+                populateDashboard();
+                showView('dashboard');
+            });
+            
+            saveResumeBtn.addEventListener('click', saveCurrentResume);
+            
+            document.getElementById('color-picker').addEventListener('click', function(e) {
+                if(e.target.classList.contains('color-dot')) {
+                    const color = e.target.dataset.color;
+                    document.documentElement.style.setProperty('--accent-color', color);
+                    currentResumeData.accentColor = color;
+                    // Remove active class from all dots
+                    this.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+                    e.target.classList.add('active');
+                }
+            });
+            
+            downloadPdfBtn.addEventListener('click', function() {
+                const element = document.getElementById('resume-preview');
+                const opt = {
+                    margin: 0,
+                    filename: `${currentResumeData.name || 'resume'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save();
+            });
+
+            checkUser();
+        });
+
+        // Make functions globally accessible
+        window.previewResume = previewResume;
+        window.editResume = editResume;
+        window.deleteItem = deleteItem;
+        window.duplicateResume = duplicateResume;
+        window.editCoverLetter = editCoverLetter;
+        window.addDynamicItem = addDynamicItem;
+        window.moveSectionUp = moveSectionUp;
+        window.moveSectionDown = moveSectionDown;
+        window.removeSection = removeSection;
+        window.addCustomSection = addCustomSection;
+        window.buildPreview = buildPreview;
+        window.generateSummary = generateSummary;
+        window.enhanceDescription = enhanceDescription;
+    </script>
+</body>
+</html>
